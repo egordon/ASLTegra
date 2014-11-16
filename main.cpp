@@ -58,7 +58,6 @@ int main(int argc, char* argv[]) {
 			threshold( bwim, threshold_output, THRESH, 255, THRESH_BINARY );
 			findContours(threshold_output, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0) );
 			letters[i] = contours[0];
-			letters_rect[i] = fitEllipse(contours[0]);
 		}
 	}
 
@@ -232,7 +231,6 @@ void processVideo() {
 
 			// save in memory
 			letters[keyboard - 'a'] = contours[maxIndex];
-			letters_rect[keyboard - 'a'] = fitEllipse(contours[maxIndex]);
 
 			// write to file
 			char buf[13 * sizeof(char)];
