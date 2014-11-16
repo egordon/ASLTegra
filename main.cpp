@@ -233,7 +233,8 @@ void processVideo() {
 		// Show the current frame and the fg masks
 		imshow("Crop Frame", cropFrame);
 		imshow("Foreground", drawing);
-		if(contourImg.rows > 0) imshow("Contour", contourImg);
+		if (contourImg.rows > 0)
+			imshow("Contour", contourImg);
 		imshow("Letter", letterText);
 
 		// Get the input from the keyboard

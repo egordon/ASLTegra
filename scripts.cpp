@@ -3,6 +3,7 @@
 void doSystemCalls(char c) {
 	// 'y' 'o' (in sequence) will send a "YO!" to subscribers to YOASL
 	static bool yoFlag = false;
+
 	switch (c) {
 	case 'o':
 		if (yoFlag) {
