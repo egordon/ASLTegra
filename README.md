@@ -1,4 +1,23 @@
-ASLTegra
-========
+# ASLTegra
+ASLTegra is a Sign Language translator for the NVidia Jetson TK1, written
+using [OpenCV](http://opencv.org/).  It currently translates letters only.
 
-HackPrinceton: Sign Language Translator for the NVidia Jetson TK1
+## About
+More generally, this program reads from a video stream (e.g. webcam) and
+matches them to a set of reference images using the `matchShapes` function.
+
+## Controls
+ * To create a reference image, press any `letter key` on the keyboard for the image
+to map to.  This will create (and overwrite) the corresponding image in the
+`images/` directory.
+ * To reset the base background, press `space`.
+ * To exit, press `esc`.
+
+## Credits
+This software was created by Ethan Gordon ([@egordon](https://github.com/egordon)),
+Davis Liu ([@liuquinlin](https://github.com/liuquinlin)), and Jeffrey Han
+([@itdelatrisu](https://github.com/itdelatrisu)) during HackPrinceton Fall 2014.
+
+## License
+**This software is licensed under the MIT license.**
+You can find the full text of the license [here](LICENSE).
