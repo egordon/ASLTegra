@@ -13,8 +13,8 @@
 using namespace cv;
 using namespace std;
 
-enum { MAX_WORDS = 26, THRESH = 200, SAMPLE_RATE = 1, KEY_ESC = 27, NUM_LETTERS = 5, SHAPE_WEIGHT = 2, RESET_THRESH = 25000000 };
-#define DIFF_THRESH 1.0
+enum { MAX_WORDS = 26, THRESH = 200, SAMPLE_RATE = 1, KEY_ESC = 27, NUM_LETTERS = 3, SHAPE_WEIGHT = 2, RESET_THRESH = 25000000, MAX_COUNT=2 };
+#define DIFF_THRESH 200
 
 // Global variables
 Ptr<BackgroundSubtractor> pMOG2; //MOG2 Background subtractor
@@ -61,6 +61,46 @@ int main(int argc, char* argv[])
 	return EXIT_SUCCESS;
 }
 
+// -----------------------
+
+// internal helper:
+int distance_2( vector<Point> a, vector<Point>  b )
+{
+    int maxDistAB = 0;
+    for (size_t i=0; i<a.size(); i++)
+    {
+        int minB = 1000000;
+        for (size_t j=0; j<b.size(); j++)
+        {
+            int dx = (a[i].x - b[j].x);     
+            int dy = (a[i].y - b[j].y);     
+            int tmpDist = dx*dx + dy*dy;
+
+            if (tmpDist < minB)
+            {
+                minB = tmpDist;
+            }
+            if ( tmpDist == 0 )
+            {
+                break; // can't get better than equal.
+            }
+        }
+        maxDistAB += minB;
+    }
+    return maxDistAB;
+}
+
+double distance_hausdorff( vector<Point> a, vector<Point> b )
+{
+    int maxDistAB = distance_2( a, b );
+    int maxDistBA = distance_2( b, a );   
+    int maxDist = max(maxDistAB,maxDistBA);
+
+    return sqrt((double)maxDist);
+}
+
+// -----------------------
+
 void processVideo() {
 	// Create the capture object
 	VideoCapture capture = VideoCapture(0);
@@ -88,7 +128,7 @@ void processVideo() {
 		}
 
 		// Crop Frame to smaller region
-		cv::Rect myROI(50, 50, 200, 200);
+		cv::Rect myROI(50, 150, 200, 200);
 		Mat cropFrame = frame(myROI);
 
 		// Update the background model
@@ -141,12 +181,14 @@ void processVideo() {
 				if (letters[i].size() == 0) continue;
 
 				// Match Shapes Functions
-				double diff = matchShapes(letters[i], contours[maxIndex],
+				/* double diff = matchShapes(letters[i], contours[maxIndex],
 				                          CV_CONTOURS_MATCH_I3, 0);
 				diff += matchShapes(letters[i], contours[maxIndex],
 				                          CV_CONTOURS_MATCH_I2, 0);
 				diff += matchShapes(letters[i], contours[maxIndex],
-				                          CV_CONTOURS_MATCH_I1, 0);
+				                          CV_CONTOURS_MATCH_I1, 0); */
+
+				double diff = distance_hausdorff(letters[i], contours[maxIndex]);
 
 				if (diff < lowestDiff) {
 					lowestDiff = diff;
@@ -173,7 +215,7 @@ void processVideo() {
 					maxChar = i;
 				}
 			}
-			if (maxChar && maxCount >= 4) {
+			if (maxChar && maxCount >= MAX_COUNT) {
 				maxChar = maxChar - 1 + 'a';
 				char buf[2 * sizeof(char)];
 				sprintf(buf, "%c", maxChar);
