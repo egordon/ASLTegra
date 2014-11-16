@@ -13,7 +13,7 @@
 using namespace cv;
 using namespace std;
 
-enum { MAX_WORDS = 26, THRESH = 200, SAMPLE_RATE = 2, KEY_ESC = 27 };
+enum { MAX_WORDS = 26, THRESH = 200, SAMPLE_RATE = 30, KEY_ESC = 27 };
 
 // Global variables
 Ptr<BackgroundSubtractor> pMOG2; //MOG2 Background subtractor
