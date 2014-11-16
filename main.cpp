@@ -24,6 +24,7 @@ int keyboard;
 RNG rng(12345);
 int thresh = 200;
 Mat letters[MAX_WORDS];
+int frames = 0;
 
 //function declarations
 void processVideo();
@@ -45,7 +46,7 @@ int main(int argc, char* argv[])
 		sprintf(buf, "images/%c.png", (char)('a' + i));
 		Mat im = imread(buf, 1);
 		if (im.data) {
-			letters[i] = im;
+			letters[i] = im.clone();
 		}
 	}
 
@@ -94,26 +95,44 @@ void processVideo() {
 	   findContours( threshold_output, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0) );
 
 	   /// Find largest contour
-	   Mat drawing = Mat::zeros( threshold_output.size(), CV_8UC3 );
+	   Mat drawing = Mat::zeros( cropFrame.size(), CV_8UC3 );
 	double largest_area=0;
-	int i=0;
+	int maxIndex =0;
 	double a;
 	   for( int j = 0; j< contours.size(); j++ )
 	      {
 		a=contourArea( contours[j],false);  //  Find the area of contour
 		    if(a>largest_area){
 			largest_area=a;
-			i=j;      //Store the index of largest contour
+			maxIndex=j;      //Store the index of largest contour
 		    }
 	      }
 
 	// Draw Largest Contours
 	Scalar color = Scalar( 0, 0, 255);
-		drawContours( drawing, contours, i, Scalar(255, 255, 255), CV_FILLED); // fill white
-	// color, 1, 8, vector<Vec4i>(), 0, Point() );
-		//drawContours( drawing, hull, i, color, 1, 8, vector<Vec4i>(), 0, Point() );
-	
-	// Fill 
+	drawContours( drawing, contours, maxIndex, Scalar(255, 255, 255), CV_FILLED); // fill white
+
+	// Compare to reference imagesaaa
+	if (frames++ >= 60) {
+		frames = 0;
+		long lowestDiff = 255*150*150*4 + 1; // larger than largest possible difference
+		char best = 0; 
+		for (int i = 0; i < MAX_WORDS; i++) {
+			//cout << letters[i].rows << endl;
+			if (letters[i].rows == 0) continue;
+			Mat im;
+			bitwise_xor(drawing, letters[i], im);
+			Scalar diffV = sum(im);
+			long diff = diffV[0] + diffV[1] + diffV[2] + diffV[3]; 
+			if (diff < lowestDiff) {
+				lowestDiff = diff;
+				best = i + 'a';
+			}
+			//cout << (char)('a' + i) << ": " << diff << endl;
+			
+		}
+		cout << best << ",  Diff: " << lowestDiff << endl; 
+	}
 
         //show the current frame and the fg masks
 	imshow("Crop Frame", cropFrame);
