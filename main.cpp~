@@ -62,7 +62,7 @@ int main(int argc, char* argv[])
 }
 
 // -----------------------
-// Source: http://stackoverflow.com/questions/21482534/how-to-use-shape-distance-and-common-interfaces-to-find-hausdorff-distance-in-op
+
 // internal helper:
 int distance_2( vector<Point> a, vector<Point>  b )
 {
