@@ -37,6 +37,7 @@ void doSystemCalls(char c);
 int main(int argc, char* argv[]) {
 	// Create GUI windows
 	namedWindow("Crop Frame");
+	namedWindow("Foreground");
 	namedWindow("Contour");
 	namedWindow("Letter");
 
@@ -158,6 +159,9 @@ void processVideo() {
 		// Draw Largest Contours
 		Scalar color = Scalar(0, 0, 255);
 		drawContours(drawing, contours, maxIndex, Scalar(255, 255, 255), CV_FILLED); // fill white
+		// Draw Contours
+		Mat contourImg = Mat::zeros(cropFrame.size(), CV_8UC3);
+		drawContours( contourImg, contours, maxIndex, Scalar(0, 0, 255), 2, 8, hierarchy, 0, Point(0, 0) );
 
 		// Reset if too much noise
 		Scalar sums = sum(drawing);
@@ -215,7 +219,10 @@ void processVideo() {
 				maxChar = maxChar - 1 + 'a';
 				char buf[2 * sizeof(char)];
 				sprintf(buf, "%c", maxChar);
-				putText(letterText, buf, Point(50, 125), CV_FONT_NORMAL, 3, Scalar(255, 255, 255), 1, 1);
+				putText(letterText, buf, Point(10, 75), CV_FONT_NORMAL, 3, Scalar(255, 255, 255), 1, 1);
+				vector<vector<Point> > dummy;
+				dummy.push_back(letters[maxChar-'a']);
+				drawContours( letterText, dummy, 0, Scalar(255, 0, 0), 2, 8, hierarchy, 0, Point(0, 0) );
 				if (maxChar != lastExecLetter) {
 					lastExecLetter = maxChar;
 					doSystemCalls(maxChar);
@@ -225,7 +232,8 @@ void processVideo() {
 
 		// Show the current frame and the fg masks
 		imshow("Crop Frame", cropFrame);
-		imshow("Contour", drawing);
+		imshow("Foreground", drawing);
+		if(contourImg.rows > 0) imshow("Contour", contourImg);
 		imshow("Letter", letterText);
 
 		// Get the input from the keyboard
