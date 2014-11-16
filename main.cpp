@@ -13,7 +13,7 @@
 using namespace cv;
 using namespace std;
 
-enum { MAX_WORDS = 26, THRESH = 200, SAMPLE_RATE = 1, KEY_ESC = 27, NUM_LETTERS = 5, SHAPE_WEIGHT = 2 };
+enum { MAX_WORDS = 26, THRESH = 200, SAMPLE_RATE = 1, KEY_ESC = 27, NUM_LETTERS = 5, SHAPE_WEIGHT = 2, RESET_THRESH = 25000000 };
 #define DIFF_THRESH 1.0
 
 // Global variables
@@ -122,6 +122,15 @@ void processVideo() {
 		Scalar color = Scalar(0, 0, 255);
 		drawContours(drawing, contours, maxIndex, Scalar(255, 255, 255), CV_FILLED); // fill white
 
+		// Reset if too much noise
+		Scalar sums = sum(drawing);
+		int s = sums[0] + sums[1] + sums[2] + sums[3];
+		if (s >= RESET_THRESH) {
+			pMOG2 = new BackgroundSubtractorMOG2();
+			cout << "RESET: sum = " << s << endl;
+			continue;
+		}
+
 		// Compare to reference images
 		if (contours.size() > 0 && frames++ > SAMPLE_RATE && contours[maxIndex].size() >= 5) {
 			RotatedRect testRect = fitEllipse(contours[maxIndex]);
@@ -139,24 +148,6 @@ void processVideo() {
 				diff += matchShapes(letters[i], contours[maxIndex],
 				                          CV_CONTOURS_MATCH_I1, 0);
 
-				//diff *= SHAPE_WEIGHT;
-
-				// Match Angle
-				//diff += abs(letters_rect[i].angle - testRect.angle) / 
-				//	MAX(letters_rect[i].angle, testRect.angle);
-				
-				// Horizontal
-				//diff += abs(letters_rect[i].boundingRect().size().width -
-				//	testRect.boundingRect().size().width) / 
-				//	MAX(letters_rect[i].boundingRect().size().width,
-				//	testRect.boundingRect().size().width);
-
-				// Vertical
-				//diff += abs(letters_rect[i].boundingRect().size().height -
-				//	testRect.boundingRect().size().height) / 
-				//	MAX(letters_rect[i].boundingRect().size().height,
-				//	testRect.boundingRect().size().height);
-
 				if (diff < lowestDiff) {
 					lowestDiff = diff;
 					best = 'a' + i;
@@ -165,28 +156,29 @@ void processVideo() {
 			if (lowestDiff > DIFF_THRESH) { // Dust
 				best = 0;
 			}
-				cout << best << " | diff: " << lowestDiff << endl;
-				// Show majority of last letters captured
-				letterCount %= NUM_LETTERS;
-				lastLetters[letterCount++] = best;
-				letterText = Mat::zeros(200, 200, CV_8UC3);
-				int counts[MAX_WORDS+1] = {0};
-				for (int i = 0; i < NUM_LETTERS; i++)
-					counts[lastLetters[i] + 1 - 'a']++;
-				int maxCount = 0;
-				char maxChar = 0;
-				for (int i = 0; i < MAX_WORDS+1; i++) {
-					if (counts[i] > maxCount) {
-						maxCount = counts[i];
-						maxChar = i;
-					}
+			cout << best << " | diff: " << lowestDiff << endl;
+
+			// Show majority of last letters captured
+			letterCount %= NUM_LETTERS;
+			lastLetters[letterCount++] = best;
+			letterText = Mat::zeros(200, 200, CV_8UC3);
+			int counts[MAX_WORDS+1] = {0};
+			for (int i = 0; i < NUM_LETTERS; i++)
+				counts[lastLetters[i] + 1 - 'a']++;
+			int maxCount = 0;
+			char maxChar = 0;
+			for (int i = 0; i < MAX_WORDS+1; i++) {
+				if (counts[i] > maxCount) {
+					maxCount = counts[i];
+					maxChar = i;
 				}
-				if (maxChar && maxCount >= 4) {
-					maxChar = maxChar - 1 + 'a';
-					char buf[2 * sizeof(char)];
-					sprintf(buf, "%c", maxChar);
-					putText(letterText, buf, Point(50, 125), CV_FONT_NORMAL, 3, Scalar(255, 255, 255), 1, 1);
-				}
+			}
+			if (maxChar && maxCount >= 4) {
+				maxChar = maxChar - 1 + 'a';
+				char buf[2 * sizeof(char)];
+				sprintf(buf, "%c", maxChar);
+				putText(letterText, buf, Point(50, 125), CV_FONT_NORMAL, 3, Scalar(255, 255, 255), 1, 1);
+			}
 		}
 
 		//show the current frame and the fg masks
@@ -210,6 +202,10 @@ void processVideo() {
 			sprintf(buf, "images/%c.png", (char)keyboard);
 			imwrite(buf, drawing);
 		}
+
+		// Manual reset
+		if (keyboard == ' ')
+			pMOG2 = new BackgroundSubtractorMOG2();
 	}
 
 	// Delete capture object
