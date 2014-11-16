@@ -125,7 +125,7 @@ void processVideo() {
 	drawContours( drawing, contours, maxIndex, Scalar(255, 255, 255), CV_FILLED); // fill white
 
 	// Compare to reference images
-	if (frames++ >= 10 && contours.size() != 0) {
+	if (frames++ >= 30 && contours.size() != 0) {
 		frames = 0;
 		double lowestDiff = HUGE_VAL;
 		char best = 0;
