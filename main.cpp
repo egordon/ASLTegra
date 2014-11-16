@@ -14,7 +14,7 @@ using namespace cv;
 using namespace std;
 
 /// Maximum difference threshold to accept an input
-#define DIFF_THRESH 200
+#define DIFF_THRESH 230
 
 enum {
 	MAX_WORDS = 26,          // Number of letters
