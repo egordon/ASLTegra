@@ -42,7 +42,7 @@ int main(int argc, char* argv[]) {
 	namedWindow("Letter");
 
 	// Create Background Subtractor objects (MOG2 approach)
-	pMOG2 = new BackgroundSubtractorMOG2();
+	pMOG2 = createBackgroundSubtractorMOG2(2000);
 
 	// Preload letter images
 	for (int i = 0; i < MAX_WORDS; i++) {
@@ -131,7 +131,7 @@ void processVideo() {
 		Mat cropFrame = frame(myROI);
 
 		// Update the background model
-		pMOG2->operator()(cropFrame, fgMaskMOG2);
+		pMOG2->apply(cropFrame, fgMaskMOG2, 0.001);
 
 		// Generate Convex Hull
 		Mat threshold_output;
@@ -167,7 +167,7 @@ void processVideo() {
 		Scalar sums = sum(drawing);
 		int s = sums[0] + sums[1] + sums[2] + sums[3];
 		if (s >= RESET_THRESH) {
-			pMOG2 = new BackgroundSubtractorMOG2();
+			pMOG2 = createBackgroundSubtractorMOG2(2000);
 			continue;
 		}
 
@@ -255,7 +255,7 @@ void processVideo() {
 
 		// Manual reset
 		if (keyboard == ' ')
-			pMOG2 = new BackgroundSubtractorMOG2();
+			pMOG2 = createBackgroundSubtractorMOG2(2000);
 	}
 
 	// Delete capture object
